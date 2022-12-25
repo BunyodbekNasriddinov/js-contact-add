@@ -1,9 +1,49 @@
 const elForm = document.querySelector(".js-form");
-let elInputName = document.querySelector(".js-input-name");
-let elInputReletive = document.querySelector(".js-input-relative");
-let elInputPhoneNumber = document.querySelector(".js-input-phone-number");
 const elList = document.querySelector(".js-list");
-let contacts = [];
+let elInputName = document.querySelector(".js-input-name");
+let elPhoneNumber = document.querySelector(".js-input-phone-number");
+let elSelect = document.querySelector(".js-select");
+
+const elEditForm = document.querySelector(".js-edit-form");
+let elEditName = document.querySelector(".js-edit-name");
+let elEditPhoneNumber = document.querySelector(".js-edit-phone-number");
+let elEditSelect = document.querySelector(".js-edit-select");
+
+const elScrollBtn = document.querySelector(".js-scroll");
+const elModeBtn = document.querySelector(".js-mode");
+const elCloseBtn = document.querySelector(".js-close");
+
+let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+
+window.addEventListener("scroll", () => {
+  if (window.scrollY >= 150) {
+    elScrollBtn.classList.remove("d-none");
+  } else {
+    elScrollBtn.classList.add("d-none");
+  }
+});
+
+let theme = false;
+
+elModeBtn.addEventListener("click", () => {
+  theme = !theme;
+
+  let bg = theme ? "dark" : "light";
+  localStorage.setItem("theme", bg);
+  changeTheme();
+});
+
+changeTheme();
+
+function changeTheme() {
+  if (localStorage.getItem("theme") === "dark") {
+    document.querySelector("body").classList.add("dark");
+    elModeBtn.children[0].src = "./images/mode-icon.png";
+  } else {
+    document.querySelector("body").classList.remove("dark");
+    elModeBtn.children[0].src = "./images/mode-icon-dark.png";
+  }
+}
 
 const renderContact = (array, node) => {
   node.innerHTML = "";
@@ -11,48 +51,40 @@ const renderContact = (array, node) => {
     const newItem = document.createElement("li");
 
     const newSpan = document.createElement("span");
-    const newFavoriteCheckInput = document.createElement("input");
     const newEditButton = document.createElement("button");
     const newDeleteButton = document.createElement("button");
     const newTimeSpan = document.createElement("span");
 
-    // newItem.appendChild(newFavoriteCheckInput);
     newItem.appendChild(newSpan);
     newItem.appendChild(newEditButton);
     newItem.appendChild(newDeleteButton);
     newItem.appendChild(newTimeSpan);
 
-    newFavoriteCheckInput.type = "checkbox";
     newDeleteButton.innerText = "DELETE";
     newEditButton.innerText = "EDIT";
     newTimeSpan.innerText = time();
 
     newItem.setAttribute("class", "list-group-item d-flex align-items-center");
-    newFavoriteCheckInput.setAttribute(
-      "class",
-      "form-check-input m-0 js-favorite-check-input"
-    );
     newSpan.setAttribute("class", "ms-3 fs-5");
     newEditButton.setAttribute("class", "btn btn-warning ms-auto js-edit-btn");
     newDeleteButton.setAttribute("class", "btn btn-danger ms-2 js-delete-btn");
     newTimeSpan.setAttribute("class", "ms-1 btn btn-secondary");
 
-    newFavoriteCheckInput.dataset.contactId = item.id;
     newEditButton.dataset.contactId = item.id;
     newDeleteButton.dataset.contactId = item.id;
 
-    if (item.isCompleted) {
-      contacts.isCompleted = true;
-    }
-
     newSpan.innerHTML = `
-    <h3>${item.id}. ${item.name}</h3>
-    <p>${item.relative}</p>
-    <p class="border border-success text-success rounded p-1 fs-6">${item.phoneNumber}</p>
+      <h3>${item.id}. ${item.name}</h3>
+      <p>${item.relative}</p>
+      <p class="border border-success text-success rounded p-1 fs-6">${item.phoneNumber}
+      </p>
     `;
     node.appendChild(newItem);
+    localStorage.setItem("contacts", JSON.stringify(contacts));
   });
 };
+
+renderContact(contacts, elList);
 
 function time() {
   var date = new Date();
@@ -70,10 +102,9 @@ function time() {
 }
 
 function numberSplice(number, originalNumber) {
-  if (originalNumber) return (originalNumber = number);
+  if (originalNumber && number.length === 9) return (originalNumber = +number);
 
   if (number.length === 9) {
-    // count++;
     let numHead = number.split("").splice(0, 2).join("");
     let numBody = number.split("").splice(2).join("");
 
@@ -82,9 +113,15 @@ function numberSplice(number, originalNumber) {
   return number;
 }
 
+function numberUnSplice(number) {
+  let numHead = number.split("").splice(5, 2).join("");
+  let numBody = number.split("").splice(8).join("");
+  return +(numHead + numBody);
+}
+
 elInputName.addEventListener("input", (evt) => {
   evt.preventDefault();
-  if (elInputName.value.length < 3) {
+  if (elInputName.value.length < 3 || typeof elInputName.value[0] == "number") {
     elInputName.classList.add("border");
     elInputName.classList.add("border-danger");
   } else {
@@ -93,57 +130,50 @@ elInputName.addEventListener("input", (evt) => {
   }
 });
 
-elInputReletive.addEventListener("input", (evt) => {
+elPhoneNumber.addEventListener("input", (evt) => {
   evt.preventDefault();
-  if (elInputReletive.value.length < 3) {
-    elInputReletive.classList.add("border");
-    elInputReletive.classList.add("border-danger");
-  } else {
-    elInputReletive.classList.remove("border");
-    elInputReletive.classList.remove("border-danger");
-  }
-});
 
-elInputPhoneNumber.addEventListener("input", (evt) => {
-  evt.preventDefault();
-  if (elInputPhoneNumber.value.length < 8 || isNaN(elInputPhoneNumber.value)) {
-    elInputPhoneNumber.classList.add("border");
-    elInputPhoneNumber.classList.add("border-danger");
+  if (elPhoneNumber.value.length < 8 || isNaN(elPhoneNumber.value)) {
+    elPhoneNumber.classList.add("border");
+    elPhoneNumber.classList.add("border-danger");
   } else {
-    elInputPhoneNumber.classList.remove("border");
-    elInputPhoneNumber.classList.remove("border-danger");
-    elInputPhoneNumber.value = numberSplice(elInputPhoneNumber.value);
+    elPhoneNumber.classList.remove("border");
+    elPhoneNumber.classList.remove("border-danger");
+    elPhoneNumber.value = numberSplice(elPhoneNumber.value);
   }
 });
 
 elForm.addEventListener("submit", (evt) => {
   evt.preventDefault();
 
+  console.log(
+    contacts.findIndex((el) => el.phoneNumber === elPhoneNumber.value)
+  );
+
   if (
     elInputName.value !== "" &&
-    elInputName.value.length > 3 &&
-    elInputReletive.value !== "" &&
-    elInputReletive.value.length > 3 &&
-    elInputPhoneNumber.value !== "" &&
-    elInputPhoneNumber.value.length > 8
+    typeof elInputName.value[0] === "string" &&
+    elInputName.value.length > 2 &&
+    elPhoneNumber.value.length == 15 &&
+    contacts.findIndex((el) => el.phoneNumber === elPhoneNumber.value)
   ) {
     const newContact = {
-      id: contacts > 0 ? contacts.length + 1 : 1,
+      id: contacts.length > 0 ? contacts[contacts.length - 1].id + 1 : 1,
       name: elInputName.value,
-      relative: elInputReletive.value,
-      phoneNumber: numberSplice(elInputPhoneNumber.value),
-      isFavorite: false,
+      relative: elSelect.value,
+      phoneNumber: numberSplice(elPhoneNumber.value),
     };
 
     elInputName.value = "";
-    elInputReletive.value = "";
-    elInputPhoneNumber.value = "";
+    elPhoneNumber.value = "";
 
     contacts.push(newContact);
 
     renderContact(contacts, elList);
   }
 });
+
+let contactId;
 
 elList.addEventListener("click", (evt) => {
   evt.preventDefault();
@@ -152,73 +182,48 @@ elList.addEventListener("click", (evt) => {
     const contactId = +evt.target.dataset.contactId;
     const findedIndex = contacts.findIndex((el) => el.id === contactId);
     contacts.splice(findedIndex, 1);
+    localStorage.setItem("contacts", JSON.stringify(contacts));
     renderContact(contacts, elList);
   }
 
   if (evt.target.matches(".js-edit-btn")) {
-    const contactId = +evt.target.dataset.contactId;
+    contactId = +evt.target.dataset.contactId;
     const findedIndex = contacts.findIndex((el) => el.id === contactId);
-
-    let editContact;
-    for (let i = 0; i < 3; i++) {
-      if (i === 0) {
-        if (elInputName.value === null) {
-          i++;
-        } else {
-          editContact = prompt(
-            "Contact'ni ismini o'zgartiring",
-            contacts[findedIndex].name
-          );
-          editContact.length > 3
-            ? (contacts[findedIndex].name = editContact)
-            : (i = 0);
-          renderContact(contacts, elList);
-        }
-      }
-      if (i === 1) {
-        if (elInputReletive.value === null) i++;
-        else {
-          editContact = prompt(
-            "Contact'ni relative'ni o'zgartiring",
-            contacts[findedIndex].relative
-          );
-          editContact.length > 3
-            ? (contacts[findedIndex].relative = editContact)
-            : (i = 1);
-          renderContact(contacts, elList);
-        }
-      }
-      if (i === 2) {
-        if (elInputPhoneNumber.value === null) i++;
-        else {
-          editContact = prompt(
-            "Contact'ni phone number'ini o'zgartiring",
-            contacts[findedIndex].phoneNumber
-          );
-          editContact.length >= 9
-            ? (contacts[findedIndex].phoneNumber = numberSplice(editContact))
-            : (i = 2);
-          renderContact(contacts, elList);
-        }
-      }
-    }
+    elEditForm.classList.toggle("d-none");
+    elEditName.value = contacts[findedIndex].name;
+    elEditSelect.value = contacts[findedIndex].relative;
+    elEditPhoneNumber.value = contacts[findedIndex].phoneNumber;
+    localStorage.setItem("contacts", JSON.stringify(contacts));
   }
-
-  // if (evt.target.matches(".js-favorite-check-input")) {
-  //   const contactId = +evt.target.dataset.contactId;
-  //   const findedItem = contacts.find((el) => el.id === contactId);
-  //   findedItem.isCompleted = !findedItem.isCompleted;
-
-  //   completedTodo = contacts.filter((el) => el.isCompleted);
-  //   unCompletedTodo = contacts.filter((el) => !el.isCompleted);
-
-  //   elAllcontactsNum.textContent = `(${contacts.length})`;
-  //   elCompletedcontactsNum.textContent = `(${completedTodo.length})`;
-  //   elUnCompletedcontactsNum.textContent = `(${unCompletedTodo.length})`;
-
-  //   renderTodo(contacts, elList);
-  //   localStorage.setItem("mycontacts", JSON.stringify(contacts));
-  // }
 });
 
-// console.log(prompt(""));
+elEditForm.addEventListener("submit", (evt) => {
+  evt.preventDefault();
+  const findedIndex = contacts.findIndex((el) => el.id === contactId);
+  if (
+    elEditName.value !== "" &&
+    typeof elEditName.value[0] === "string" &&
+    elEditName.value.length > 2 &&
+    elEditPhoneNumber.value.length == 15 &&
+    contacts.findIndex((el) => el.phoneNumber === elEditPhoneNumber.value)
+  ) {
+    console.log(elEditName.value);
+    contacts[findedIndex].name = elEditName.value;
+    contacts[findedIndex].relative = elEditSelect.value;
+    contacts[findedIndex].phoneNumber = elEditPhoneNumber.value;
+    renderContact(contacts, elList);
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+  }
+});
+
+function removeClass(elEditForm) {
+  elEditForm.classList.add("d-none");
+}
+
+elCloseBtn.addEventListener("click", removeClass);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    removeClass(elEditForm);
+  }
+});
