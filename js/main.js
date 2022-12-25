@@ -197,6 +197,34 @@ elList.addEventListener("click", (evt) => {
   }
 });
 
+elEditName.addEventListener("input", (evt) => {
+  evt.preventDefault();
+  if (elInputName.value.length < 3 || typeof elInputName.value[0] == "number") {
+    elEditName.classList.add("border");
+    elEditName.classList.add("border-danger");
+  } else {
+    elEditName.classList.remove("border");
+    elEditName.classList.remove("border-danger");
+  }
+});
+
+elEditPhoneNumber.addEventListener("input", (evt) => {
+  evt.preventDefault();
+
+  if (elEditPhoneNumber.value.length < 8 || isNaN(elEditPhoneNumber.value)) {
+    elEditPhoneNumber.classList.add("border");
+    elEditPhoneNumber.classList.add("border-danger");
+  } else {
+    elEditPhoneNumber.classList.remove("border");
+    elEditPhoneNumber.classList.remove("border-danger");
+    elEditPhoneNumber.value = numberSplice(elEditPhoneNumber.value);
+  }
+});
+
+function removeClass(elEditForm) {
+  elEditForm.classList.add("d-none");
+}
+
 elEditForm.addEventListener("submit", (evt) => {
   evt.preventDefault();
   const findedIndex = contacts.findIndex((el) => el.id === contactId);
@@ -213,12 +241,9 @@ elEditForm.addEventListener("submit", (evt) => {
     contacts[findedIndex].phoneNumber = elEditPhoneNumber.value;
     renderContact(contacts, elList);
     localStorage.setItem("contacts", JSON.stringify(contacts));
+    removeClass(elEditForm);
   }
 });
-
-function removeClass(elEditForm) {
-  elEditForm.classList.add("d-none");
-}
 
 elCloseBtn.addEventListener("click", removeClass);
 
